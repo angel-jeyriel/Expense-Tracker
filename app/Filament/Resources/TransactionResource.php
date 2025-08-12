@@ -80,6 +80,7 @@ class TransactionResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('category.name')
                     ->label('Category')
+                    ->badge()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('transaction_date')
                     ->date()
