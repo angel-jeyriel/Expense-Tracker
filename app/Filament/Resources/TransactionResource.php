@@ -27,6 +27,12 @@ class TransactionResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('user_id', auth()->id());
+    }
+
     public static function form(Form $form): Form
     {
         return $form
