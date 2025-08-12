@@ -15,9 +15,12 @@ class TransactionChart extends ChartWidget
 
     protected function getData(): array
     {
+        $userId = auth()->id();
+
         $data =
             Transaction::query()
             ->selectRaw('category_id, SUM(amount) as total_amount')
+            ->where('user_id', $userId)
             ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->groupBy('category_id')
             ->with('category')  //relationship
@@ -31,9 +34,10 @@ class TransactionChart extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => 'Total Amount',
+                    'label' => 'Expenses',
                     'data' => $values,
                     'backgroundColor' => $colors,
+                    'borderColor' => $colors,
                 ],
             ],
             'labels' => $labels,
