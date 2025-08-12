@@ -8,6 +8,7 @@ use App\Models\Budget;
 use App\Models\Category;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -24,7 +25,6 @@ class BudgetResource extends Resource
     {
         return $form
             ->schema([
-                //user categor amount startdate enddate
                 Forms\Components\Hidden::make('user_id')
                     ->default(auth()->id()),
                 Forms\Components\Select::make('category_id')
@@ -37,21 +37,45 @@ class BudgetResource extends Resource
                     })
                     ->searchable()
                     ->required(),
-
-            ]);
+                Forms\Components\TextInput::make('amount')
+                    ->numeric()
+                    ->required(),
+                Forms\Components\DatePicker::make('start_date')
+                    ->label('Start Date')
+                    ->required()
+                    ->live(),
+                Forms\Components\DatePicker::make('end_date')
+                    ->label('End Date')
+                    ->required()
+                    ->after('start_date') // Laravel validation
+                    ->minDate(fn (Get $get) => $get('start_date')), // Prevents picking before start date
+            ])
+            ->columns(2);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('category.name')
+                    ->label('Budget')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('amount')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('start_date')
+                    ->date(),
+                Tables\Columns\TextColumn::make('end_date')
+                    ->date(),
             ])
+            ->defaultSort('id', 'desc')
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->label(''),
+                Tables\Actions\DeleteAction::make()
+                    ->label(''),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
