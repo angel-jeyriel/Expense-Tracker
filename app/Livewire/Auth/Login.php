@@ -44,7 +44,7 @@ class Login extends Component
         Session::regenerate();
 
         // $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
-        return redirect()->intended(\App\Providers\RouteServiceProvider::HOME);
+        redirect()->intended(\App\Providers\RouteServiceProvider::HOME);
     }
 
     /**

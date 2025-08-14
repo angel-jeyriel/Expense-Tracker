@@ -39,6 +39,6 @@ class Register extends Component
         Auth::login($user);
 
         // $this->redirect(route('dashboard', absolute: false), navigate: true);
-        return redirect()->intended(\App\Providers\RouteServiceProvider::HOME);
+        redirect()->intended(\App\Providers\RouteServiceProvider::HOME);
     }
 }

@@ -6,5 +6,5 @@ use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvi
 
 class RouteServiceProvider extends ServiceProvider
 {
-    public const HOME = '/admin'; // Filament's default path
+    public const HOME = '/yes'; // Filament's default path
 }
