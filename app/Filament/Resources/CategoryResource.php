@@ -24,7 +24,8 @@ class CategoryResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->where('user_id', auth()->id());
+            ->whereNull('user_id')
+            ->orWhere('user_id', auth()->id());
     }
 
     public static function form(Form $form): Form
