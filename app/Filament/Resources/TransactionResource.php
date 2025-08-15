@@ -72,7 +72,7 @@ class TransactionResource extends Resource
                         'weekly' => 'Weekly',
                         'monthly' => 'Monthly',
                     ])
-                    ->required(),
+                    ->requiredIf('is_recurring', 1),
             ])
             ->columns(2);
     }

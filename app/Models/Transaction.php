@@ -8,6 +8,10 @@ class Transaction extends Model
 {
     protected $fillable = ['user_id', 'description', 'amount', 'category_id', 'transaction_date'];
 
+    protected $casts = [
+        'is_recurring' => 'boolean',
+    ];
+
     public function category()
     {
         return $this->belongsTo(Category::class);
