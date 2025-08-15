@@ -24,6 +24,8 @@ class CreateTransaction extends CreateRecord
                 'frequency' => $data['frequency'],
                 'next_occurrence' => RecurringExpense::calculateNextOccurrence($data['transaction_date'], $data['frequency']),
             ]);
+        } else {
+            dd($data['amount']);
         }
     }
 }
