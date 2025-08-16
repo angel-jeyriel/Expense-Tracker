@@ -21,14 +21,16 @@ class EditTransaction extends EditRecord
     protected function afterSave(): void
     {
         $data = $this->record->toArray();
+        $isRecurring = $this->data['is_recurring'] ?? 0;
+        $frequency = $this->data['frequency'] ?? null;
 
-        if (!empty($data['is_recurring']) && $data['is_recurring'] == 1) {
+        if ($isRecurring && $frequency) {
             // Check if there's already a recurring expense for this transaction's details
             $exists = RecurringExpense::where('description', $data['description'])
                 ->where('user_id', $data['user_id'])
                 ->where('amount', $data['amount'])
                 ->where('category_id', $data['category_id'])
-                ->where('frequency', $data['frequency'])
+                ->where('frequency', $frequency)
                 ->exists();
 
             if (!$exists) {
@@ -37,10 +39,10 @@ class EditTransaction extends EditRecord
                     'description' => $data['description'],
                     'amount' => $data['amount'],
                     'category_id' => $data['category_id'],
-                    'frequency' => $data['frequency'],
+                    'frequency' => $frequency,
                     'next_occurrence' => RecurringExpense::calculateNextOccurrence(
                         $data['transaction_date'],
-                        $data['frequency']
+                        $frequency
                     ),
                 ]);
             }

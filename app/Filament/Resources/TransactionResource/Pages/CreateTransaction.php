@@ -14,18 +14,18 @@ class CreateTransaction extends CreateRecord
     protected function afterCreate(): void
     {
         $data = $this->record->toArray();
+        $isRecurring = $this->data['is_recurring'] ?? 0;
+        $frequency = $this->data['frequency'] ?? null;
 
-        if (!empty($data['is_recurring']) && $data['is_recurring'] == 1) {
+        if ($isRecurring && $frequency) {
             RecurringExpense::create([
                 'user_id' => $data['user_id'],
                 'description' => $data['description'],
                 'amount' => $data['amount'],
                 'category_id' => $data['category_id'],
-                'frequency' => $data['frequency'],
-                'next_occurrence' => RecurringExpense::calculateNextOccurrence($data['transaction_date'], $data['frequency']),
+                'frequency' => $frequency,
+                'next_occurrence' => RecurringExpense::calculateNextOccurrence($data['transaction_date'], $frequency),
             ]);
-        } else {
-            dd($data['amount']);
         }
     }
 }
