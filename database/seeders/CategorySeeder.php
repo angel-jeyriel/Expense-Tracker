@@ -13,7 +13,12 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
-        $defaults = ['Food', 'Transport', 'Utility', 'Entertainment'];
+        $defaults = [
+            'Food',
+            'Transport',
+            'Utility',
+            'Entertainment',
+        ];
 
         foreach ($defaults as $name) {
             Category::firstOrCreate([
