@@ -4,6 +4,7 @@ namespace App\Filament\Resources\TransactionResource\Pages;
 
 use App\Filament\Resources\TransactionResource;
 use App\Models\RecurringExpense;
+use App\Services\BudgetService;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -27,5 +28,8 @@ class CreateTransaction extends CreateRecord
                 'next_occurrence' => RecurringExpense::calculateNextOccurrence($data['transaction_date'], $frequency),
             ]);
         }
+
+        // Budget check
+        BudgetService::checkBudgets($data['user_id']);
     }
 }
