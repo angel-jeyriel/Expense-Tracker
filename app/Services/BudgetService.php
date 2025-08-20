@@ -6,7 +6,7 @@ use App\Models\Budget;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Notifications\BudgetExceededNotification;
-use Filament\Actions\Action;
+use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification as FilamentNotification;
 use Filament\Notifications\Events\DatabaseNotificationsSent;
 
@@ -27,14 +27,13 @@ class BudgetService
                 // Filament database notification
                 FilamentNotification::make()
                     ->title('Budget Exceeded')
-                    ->body("You’ve exceeded your budget for {$budget->category->name}: spent {$spent}, limit {$budget->amount}.")
+                    ->body("You've exceeded your budget for {$budget->category->name}: spent {$spent}, limit {$budget->amount}.")
                     ->danger()
                     ->actions([
                         Action::make('markAsUnread')
                             ->button()
                             ->markAsUnread(),
-                    ])
-                    ->sendToDatabase($user);
+                    ])->sendToDatabase($user);
 
                 // the traditional notify
                 $user->notify(new BudgetExceededNotification($budget, $spent));

@@ -9,6 +9,15 @@ use Flowframe\Trend\TrendValue;
 
 class TransactionChart extends ChartWidget
 {
+    protected int | string | array $columnSpan = [
+        // 'default' => 1,
+        'xs' => 2,
+        'sm' => 2,
+        'md' => 2,
+        'lg' => 2,
+        'xl' => 1,
+    ];
+
     protected static ?string $heading = 'Transaction Categories';
 
     protected static string $color = 'gray';
