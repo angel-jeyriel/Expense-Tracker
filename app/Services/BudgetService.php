@@ -33,7 +33,9 @@ class BudgetService
                         Action::make('markAsUnread')
                             ->button()
                             ->markAsUnread(),
-                    ])->sendToDatabase($user);
+                    ])
+                    ->send()
+                    ->sendToDatabase($user);
 
                 // the traditional notify
                 $user->notify(new BudgetExceededNotification($budget, $spent));
