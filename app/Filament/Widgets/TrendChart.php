@@ -47,7 +47,7 @@ class TrendChart extends ChartWidget
             ],
             'labels' => $sumData->map(
                 fn (TrendValue $value) =>
-                Carbon::parse($value->date)->format('D')
+                Carbon::parse($value->date)->format('D, d')
             ),
         ];
     }

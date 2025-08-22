@@ -4,8 +4,6 @@ namespace App\Filament\Widgets;
 
 use App\Models\Transaction;
 use Filament\Widgets\ChartWidget;
-use Flowframe\Trend\Trend;
-use Flowframe\Trend\TrendValue;
 
 class TransactionChart extends ChartWidget
 {
@@ -32,7 +30,7 @@ class TransactionChart extends ChartWidget
             ->where('user_id', $userId)
             ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
             ->groupBy('category_id')
-            ->with('category')  //relationship
+            ->with('category')
             ->get();
 
         $labels = $data->map(fn ($t) => $t->category->name ?? 'Unknown')->toArray();

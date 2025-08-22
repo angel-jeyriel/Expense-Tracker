@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Notifications\BudgetExceededNotification;
 use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification as FilamentNotification;
-use Filament\Notifications\Events\DatabaseNotificationsSent;
 
 class BudgetService
 {
