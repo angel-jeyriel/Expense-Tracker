@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Transaction;
+use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Flowframe\Trend\Trend;
 use Flowframe\Trend\TrendValue;
@@ -44,7 +45,10 @@ class TrendChart extends ChartWidget
                     'backgroundColor' => 'rgba(79,70,229,0.2)',
                 ],
             ],
-            'labels' => $sumData->map(fn (TrendValue $value) => $value->date),
+            'labels' => $sumData->map(
+                fn (TrendValue $value) =>
+                Carbon::parse($value->date)->format('D')
+            ),
         ];
     }
 

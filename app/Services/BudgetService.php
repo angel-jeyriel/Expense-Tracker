@@ -29,11 +29,6 @@ class BudgetService
                     ->title('Budget Exceeded')
                     ->body("You've exceeded your budget for {$budget->category->name}: spent {$spent}, limit {$budget->amount}.")
                     ->danger()
-                    ->actions([
-                        Action::make('markAsUnread')
-                            ->button()
-                            ->markAsUnread(),
-                    ])
                     ->send()
                     ->sendToDatabase($user);
 
