@@ -64,8 +64,7 @@ class TransactionResource extends Resource
                         1 => 'Recurring transaction',
                     ])
                     ->required()
-                    ->live()
-                    ->dehydrated(false),
+                    ->live(),
                 Forms\Components\Select::make('frequency')
                     ->hidden(fn (Get $get) => $get('is_recurring') !== '1')
                     ->options([
@@ -73,8 +72,7 @@ class TransactionResource extends Resource
                         'weekly' => 'Weekly',
                         'monthly' => 'Monthly',
                     ])
-                    ->requiredIf('is_recurring', 1)
-                    ->dehydrated(false),
+                    ->requiredIf('is_recurring', 1),
             ])
             ->columns(2);
     }

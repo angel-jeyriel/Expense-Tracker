@@ -6,10 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class Transaction extends Model
 {
-    protected $fillable = ['user_id', 'description', 'amount', 'category_id', 'transaction_date'];
+    protected $fillable = [
+        'user_id', 'description', 'amount', 'category_id', 'transaction_date', 'is_recurring',
+        'frequency'
+    ];
 
     protected $casts = [
         'is_recurring' => 'boolean',
+        'transaction_date' => 'date',
+        'amount' => 'decimal:2',
     ];
 
     public function category()
