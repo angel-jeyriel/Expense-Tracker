@@ -1,8 +1,22 @@
-# -------- Stage 1: Composer install (prod) --------
-FROM composer:2 AS vendor
+# -------- Stage 1: PHP + Composer (vendor install) --------
+FROM php:8.2-fpm-alpine AS vendor
+
+# Install system deps & PHP extensions needed for composer + runtime
+RUN apk add --no-cache \
+    git bash curl icu-dev oniguruma-dev libzip-dev \
+    freetype-dev libjpeg-turbo-dev libpng-dev \
+    postgresql-dev mysql-client unzip \
+  && docker-php-ext-configure gd --with-freetype --with-jpeg \
+  && docker-php-ext-install -j$(nproc) gd intl mbstring zip pdo pdo_mysql pdo_pgsql opcache
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
 WORKDIR /app
 COPY composer.json composer.lock ./
 COPY . .
+
+# Now composer works fine (intl is installed)
 RUN composer install --no-dev --prefer-dist --no-ansi --no-interaction --no-progress --optimize-autoloader
 
 # -------- Stage 2: Build Frontend (Vite) --------
@@ -30,7 +44,7 @@ RUN apk add --no-cache \
 
 WORKDIR /var/www
 
-# Copy app (with vendor) from Composer stage
+# Copy app (with vendor)
 COPY --from=vendor /app /var/www
 
 # Copy Vite build
