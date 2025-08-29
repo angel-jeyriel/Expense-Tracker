@@ -49,3 +49,13 @@ COPY --from=vendor /app /var/www
 
 # Copy Vite build
 COPY --from=frontend /app/public/build /var/www/public/build
+
+# Copy Nginx and Supervisor configs
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/supervisord.conf /etc/supervisord.conf
+
+# Expose port 80 for Render
+EXPOSE 80
+
+# Start supervisor (which runs php-fpm + nginx)
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
