@@ -12,7 +12,6 @@ COPY . .
 # Install dependencies (production only)
 RUN composer install --no-dev --prefer-dist --no-ansi --no-interaction --no-progress --optimize-autoloader
 
-
 # -------- Stage 2: Build Frontend (Vite) --------
 FROM node:20 AS frontend
 WORKDIR /app
