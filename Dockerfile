@@ -1,34 +1,25 @@
-# -------- Stage 1: PHP + Composer (vendor install) --------
-FROM php:8.2-fpm-alpine AS vendor
-
-# Install system deps & PHP extensions needed for composer + runtime
-RUN apk add --no-cache \
-    git bash curl icu-dev oniguruma-dev libzip-dev \
-    freetype-dev libjpeg-turbo-dev libpng-dev \
-    postgresql-dev mysql-client unzip \
-  && docker-php-ext-configure gd --with-freetype --with-jpeg \
-  && docker-php-ext-install -j$(nproc) gd intl mbstring zip pdo pdo_mysql pdo_pgsql opcache
-
-# Install Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
+# -------- Stage 1: Composer install (prod) --------
+FROM composer:2 AS vendor
 WORKDIR /app
+
 COPY composer.json composer.lock ./
 COPY . .
-
-# Now composer works fine (intl is installed)
 RUN composer install --no-dev --prefer-dist --no-ansi --no-interaction --no-progress --optimize-autoloader
 
 # -------- Stage 2: Build Frontend (Vite) --------
 FROM node:18-alpine AS frontend
 WORKDIR /app
+
 COPY package*.json ./
 RUN npm ci
+
 COPY vite.config.* postcss.config.* tailwind.config.* ./
 COPY resources ./resources
 COPY public ./public
-# ✅ Ensure vendor exists for flux.css
+
+# ✅ Ensure vendor exists for flux.css and other deps
 COPY --from=vendor /app/vendor ./vendor
+
 RUN npm run build
 
 # -------- Stage 3: Runtime (Nginx + PHP-FPM) --------
@@ -44,18 +35,30 @@ RUN apk add --no-cache \
 
 WORKDIR /var/www
 
-# Copy app (with vendor)
+# Copy app (with vendor) from Composer stage
 COPY --from=vendor /app /var/www
 
 # Copy Vite build
 COPY --from=frontend /app/public/build /var/www/public/build
 
+# ✅ Fix Laravel permissions
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+
+# ✅ Cache Laravel config, routes, and views for faster startup
+RUN php artisan config:clear \
+ && php artisan route:clear \
+ && php artisan view:clear \
+ && php artisan config:cache \
+ && php artisan route:cache \
+ && php artisan view:cache
+
 # Copy Nginx and Supervisor configs
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisord.conf
 
-# Expose port 80 for Render
+# Expose HTTP
 EXPOSE 80
 
-# Start supervisor (which runs php-fpm + nginx)
+# Start Supervisor (manages PHP-FPM + Nginx)
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
