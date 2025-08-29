@@ -16,15 +16,23 @@ RUN composer install --no-dev --prefer-dist --no-ansi --no-interaction --no-prog
 FROM node:20 AS frontend
 WORKDIR /app
 
-# Copy frontend sources
-COPY package.json package-lock.json ./
-RUN npm install
+# Copy only package files first (to leverage caching)
+COPY package*.json ./
 
-# Copy the rest of the project (for Vite build)
+# Install ALL deps (including dev)
+RUN npm ci
+
+# Copy necessary config + resources
+COPY vite.config.* postcss.config.* tailwind.config.* ./
+COPY resources ./resources
+COPY public ./public
+
+# Copy the rest (in case Vite needs env or other files)
 COPY . .
 
 # Build frontend assets
 RUN npm run build
+
 
 
 # -------- Stage 3: Production runtime (PHP-FPM + Nginx) --------
