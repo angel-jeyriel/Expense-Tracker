@@ -1,68 +1,61 @@
-# -------- Stage 1: Composer install (with intl) --------
-FROM composer:2 AS vendor
+# -------- Stage 1: PHP + Composer (vendor install) --------
+FROM php:8.2-fpm-alpine AS vendor
+
+# Install system deps & PHP extensions needed for composer + runtime
+RUN apk add --no-cache \
+    git bash curl icu-dev oniguruma-dev libzip-dev \
+    freetype-dev libjpeg-turbo-dev libpng-dev \
+    postgresql-dev mysql-client unzip \
+  && docker-php-ext-configure gd --with-freetype --with-jpeg \
+  && docker-php-ext-install -j$(nproc) gd intl mbstring zip pdo pdo_mysql pdo_pgsql opcache
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
 WORKDIR /app
-
-# Install PHP extensions required for composer (intl, etc.)
-RUN apk add --no-cache icu-dev oniguruma-dev libzip-dev \
-    && docker-php-ext-install intl
-
-# Copy all project files (so artisan exists during composer install)
+COPY composer.json composer.lock ./
 COPY . .
 
-# Install dependencies (production only)
+# Now composer works fine (intl is installed)
 RUN composer install --no-dev --prefer-dist --no-ansi --no-interaction --no-progress --optimize-autoloader
 
 # -------- Stage 2: Build Frontend (Vite) --------
-FROM node:20 AS frontend
+FROM node:18-alpine AS frontend
 WORKDIR /app
-
-# Copy only package files first (to leverage caching)
 COPY package*.json ./
-
-# Install ALL deps (including dev)
 RUN npm ci
-
-# Copy necessary config + resources
 COPY vite.config.* postcss.config.* tailwind.config.* ./
 COPY resources ./resources
 COPY public ./public
-
-# Copy the rest (in case Vite needs env or other files)
-COPY . .
-
-# Build frontend assets
+# ✅ Ensure vendor exists for flux.css
+COPY --from=vendor /app/vendor ./vendor
 RUN npm run build
 
+# -------- Stage 3: Runtime (Nginx + PHP-FPM) --------
+FROM php:8.2-fpm-alpine AS runtime
 
+RUN apk add --no-cache \
+    bash curl nginx supervisor \
+    icu-dev oniguruma-dev libzip-dev \
+    freetype-dev libjpeg-turbo-dev libpng-dev \
+    postgresql-dev mysql-client \
+  && docker-php-ext-configure gd --with-freetype --with-jpeg \
+  && docker-php-ext-install -j$(nproc) gd intl mbstring zip pdo pdo_mysql pdo_pgsql opcache
 
-# -------- Stage 3: Production runtime (PHP-FPM + Nginx) --------
-FROM php:8.3-fpm-alpine AS runtime
-WORKDIR /var/www/html
+WORKDIR /var/www
 
-# Install system dependencies
-RUN apk add --no-cache bash nginx supervisor icu libzip curl git
+# Copy app (with vendor)
+COPY --from=vendor /app /var/www
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql intl
-
-# Copy vendor dependencies from Stage 1
-COPY --from=vendor /app/vendor ./vendor
-
-# Copy built frontend assets from Stage 2
-COPY --from=frontend /app/public/build ./public/build
-
-# Copy the rest of the app
-COPY . .
-
-# Set correct permissions for Laravel
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Copy Vite build
+COPY --from=frontend /app/public/build /var/www/public/build
 
 # Copy Nginx and Supervisor configs
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisord.conf
 
-# Expose HTTP port
+# Expose port 80 for Render
 EXPOSE 80
 
-# Run Supervisor (manages php-fpm + nginx)
+# Start supervisor (which runs php-fpm + nginx)
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
